@@ -1,0 +1,102 @@
+<% content_for :title, "Entries -- Soliloquy" %>
+
+<% if alert = flash[:alert] %>
+  <p class="py-2 px-3 bg-red-50 mb-5 text-red-600 font-medium rounded-lg inline-block"><%= alert %></p>
+<% end %>
+<% if notice = flash[:notice] %>
+  <p class="py-2 px-3 bg-green-50 mb-5 text-green-700 font-medium rounded-lg inline-block"><%= notice %></p>
+<% end %>
+
+<div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+  <div>
+    <h1 class="font-bold text-3xl">Your entries</h1>
+    <p class="text-gray-600 mt-1">Journaled <%= @journaled_days %> of the last <%= @streak_window %> days.</p>
+  </div>
+  <%= link_to "New entry", new_entry_path, class: "rounded-md px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-medium" %>
+</div>
+
+<p class="bg-white border border-orange-200 rounded-lg p-4 text-sm text-gray-700 mb-6">
+  <span class="font-semibold text-orange-700">A small thing:</span> <%= @tip %>
+</p>
+
+<div class="bg-white border border-gray-200 rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-end">
+  <%= form_with url: root_path, method: :get, class: "flex gap-2 items-end" do %>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Search</label>
+      <input type="text" name="q" value="<%= @query %>" placeholder="Search transcripts..." class="border border-gray-300 rounded-md px-3 py-1.5 text-sm">
+    </div>
+    <button type="submit" class="rounded-md px-3 py-1.5 bg-gray-800 text-white text-sm">Search</button>
+  <% end %>
+
+  <% if @all_tags.any? %>
+    <%= form_with url: root_path, method: :get, class: "flex gap-2 items-end" do %>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Filter by tag</label>
+        <select name="tag" onchange="this.form.requestSubmit()" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm">
+          <option value="">All tags</option>
+          <% @all_tags.each do |tag| %>
+            <option value="<%= tag %>" <%= "selected" if tag == @selected_tag %>><%= tag %></option>
+          <% end %>
+        </select>
+      </div>
+    <% end %>
+  <% end %>
+
+  <% if @query.present? || @selected_tag.present? %>
+    <%= link_to "Clear filters", root_path, class: "text-sm text-gray-500 underline" %>
+  <% end %>
+</div>
+
+<% if @on_this_day_entries.any? %>
+  <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+    <h2 class="font-semibold text-yellow-800 mb-2">On this day</h2>
+    <% @on_this_day_entries.each do |entry| %>
+      <p class="text-sm text-gray-700 mb-1"><span class="text-gray-400"><%= entry.created_at.strftime("%b %-d, %Y") %>:</span> <%= truncate(entry.transcript, length: 160) %></p>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="space-y-4">
+  <% if @entries.empty? %>
+    <p class="text-gray-500">No entries yet -- <%= link_to "write your first one", new_entry_path, class: "underline text-orange-600" %>.</p>
+  <% end %>
+
+  <% @entries.each do |entry| %>
+    <article class="bg-white border border-gray-200 rounded-lg p-5">
+      <div class="flex items-center justify-between text-xs text-gray-400 mb-2">
+        <span><%= entry.created_at.strftime("%B %-d, %Y at %-I:%M %p") %><%= " -- #{entry.speaker}" if entry.speaker.present? %></span>
+        <span><%= pluralize(entry.word_count, "word") %></span>
+      </div>
+
+      <p class="text-gray-800 whitespace-pre-line mb-3"><%= entry.transcript %></p>
+
+      <% if entry.audio.attached? %>
+        <audio controls class="w-full mb-2"><source src="<%= url_for(entry.audio) %>"></audio>
+      <% end %>
+      <% if entry.video.attached? %>
+        <video controls class="w-full max-h-64 mb-2"><source src="<%= url_for(entry.video) %>"></video>
+      <% end %>
+
+      <% if entry.tags.any? %>
+        <div class="flex flex-wrap gap-1 mb-3">
+          <% entry.tags.each do |tag| %>
+            <%= link_to tag, root_path(tag: tag), class: "text-xs bg-orange-100 text-orange-700 rounded-full px-2 py-0.5" %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="flex flex-wrap items-center gap-4 text-xs text-gray-500 border-t border-gray-100 pt-3">
+        <%= form_with model: entry, url: entry_path(entry), method: :patch, class: "flex items-center gap-1" do |form| %>
+          <%= form.hidden_field :shareable_with_partner, value: !entry.shareable_with_partner %>
+          <%= form.submit entry.shareable_with_partner ? "Shared with partner" : "Share with partner", class: "underline cursor-pointer bg-transparent border-0 p-0 #{'text-orange-600 font-medium' if entry.shareable_with_partner}" %>
+        <% end %>
+        <%= form_with model: entry, url: entry_path(entry), method: :patch, class: "flex items-center gap-1" do |form| %>
+          <%= form.hidden_field :shareable_with_provider, value: !entry.shareable_with_provider %>
+          <%= form.submit entry.shareable_with_provider ? "Shared with provider" : "Share with provider", class: "underline cursor-pointer bg-transparent border-0 p-0 #{'text-orange-600 font-medium' if entry.shareable_with_provider}" %>
+        <% end %>
+        <%= link_to "Edit", edit_entry_path(entry), class: "underline" %>
+        <%= button_to "Delete", entry_path(entry), method: :delete, form: { data: { turbo_confirm: "Delete this entry for good?" } }, class: "underline cursor-pointer bg-transparent border-0 p-0 text-red-500" %>
+      </div>
+    </article>
+  <% end %>
+</div>

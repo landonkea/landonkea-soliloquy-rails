@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  days: 1
+  audience: self
+  entry_count: 2
+  total_word_count: 20
+  summary: A mostly steady couple of days, with some stress about a work deadline.
+  mood_notes: Mood held up okay despite the stress.
+  key_topics: <%= ["work", "walk"].to_json %>
+  mood_score: 6
+  user: one
+
+two:
+  days: 7
+  audience: self
+  entry_count: 5
+  total_word_count: 80
+  summary: A calmer week overall.
+  mood_notes: Mood trended upward toward the end of the week.
+  key_topics: <%= ["family"].to_json %>
+  mood_score: 8
+  user: two

@@ -1,0 +1,10 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "bcebfb22e59b74d406df16ba189e8d36c97ba93fcc4899267a70ed18c3de4283",
+      "note": "Reviewed and safe: MoodChartService.render() only ever interpolates a mood_score, an integer that AnalysisResult always clamps to the 1-10 range (see AnalyzerService's response parsing) before it's ever stored. No free-text model attribute (summary, mood_notes, key_topics) reaches this SVG string, so there is nothing here for a crafted transcript or AI response to inject through."
+    }
+  ],
+  "updated": "2026-08-20 10:24:00 -0700",
+  "brakeman_version": "8.0.6"
+}

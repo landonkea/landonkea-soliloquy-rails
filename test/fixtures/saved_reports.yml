@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  days: 30
+  audience: self
+  content: "# Soliloquy report\n\nA month of steady journaling."
+  source: manual
+  user: one
+
+two:
+  days: 30
+  audience: self
+  content: "# Soliloquy report\n\nAnother month, another report."
+  source: scheduled
+  user: two

@@ -1,0 +1,7 @@
+web: bin/rails server
+css: bin/rails tailwindcss:watch
+jobs: bin/jobs
+# Uncomment to also run the MQTT voice-journal bridge locally (needs a broker
+# reachable at $MQTT_HOST:$MQTT_PORT -- see .env.example and the README's "MQTT
+# bridge" section for how to run one with Docker).
+# mqtt: bin/mqtt_listener

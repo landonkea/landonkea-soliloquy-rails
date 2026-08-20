@@ -1,0 +1,42 @@
+# ───────────────────────────────────────────────────────────────────
+# storage.yml, where Active Storage keeps uploaded audio/video files
+# ───────────────────────────────────────────────────────────────────
+# This is the direct replacement for the original Python app's hand-written
+# object_storage.py (a boto3 S3 client wrapper). Active Storage already speaks S3 --
+# and any S3-compatible service, including MinIO and Cloudflare R2, the exact same two
+# targets the original called out -- so pointing this at one is a config change here
+# too, not a rewrite. "test" and "local" (used in development) both use plain local
+# disk storage so the app runs with zero cloud setup out of the box; "production" reads
+# real credentials from the environment and never has a secret written into this file.
+
+test:
+  # Files written during the test suite land in tmp/storage and get wiped between runs
+  # -- nothing here needs to survive past the test process, so there's no reason to
+  # touch real (or even locally-persistent) storage for tests.
+  service: Disk
+  root: <%= Rails.root.join("tmp/storage") %>
+
+local:
+  # Plain files on disk under storage/ -- this is what makes `bin/rails server` work
+  # immediately after cloning the repo, no MinIO/S3 account needed for local
+  # development.
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+production:
+  # S3-compatible storage, configured entirely through environment variables (see
+  # .env.example) so nothing here ever needs editing per-deploy or per-provider.
+  # endpoint left blank means "talk to real AWS S3"; pointing S3_ENDPOINT_URL at a
+  # MinIO or Cloudflare R2 URL instead is the only change needed to use either of
+  # those, exactly like the original's own S3_ENDPOINT_URL env var did for boto3.
+  service: S3
+  access_key_id: <%= ENV["S3_ACCESS_KEY"] %>
+  secret_access_key: <%= ENV["S3_SECRET_KEY"] %>
+  region: <%= ENV.fetch("S3_REGION", "us-east-1") %>
+  bucket: <%= ENV.fetch("S3_BUCKET", "soliloquy") %>
+  endpoint: <%= ENV["S3_ENDPOINT_URL"].presence %>
+  # MinIO and most self-hosted S3-compatible services need "path style" bucket URLs
+  # (http://host/bucket/key) instead of AWS's default "virtual host style"
+  # (http://bucket.host/key) -- forced on whenever a custom endpoint is set, since a
+  # custom endpoint almost always means "not real AWS."
+  force_path_style: <%= ENV["S3_ENDPOINT_URL"].present? %>

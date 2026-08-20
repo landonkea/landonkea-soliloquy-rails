@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Soliloquy" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Landonkea Soliloquy Rails">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-orange-50 text-gray-900 min-h-screen">
+    <% if authenticated? %>
+      <%# A simple top nav so every page can reach the other pages -- shown only once
+          someone's actually logged in, since the login/registration pages don't need
+          it and showing entry-related links to a signed-out visitor makes no sense. %>
+      <nav class="bg-white border-b border-orange-200">
+        <div class="container mx-auto px-5 py-3 flex flex-wrap items-center gap-4 text-sm">
+          <%= link_to "Soliloquy", root_path, class: "font-bold text-lg text-orange-600" %>
+          <%= link_to "Entries", root_path, class: "hover:underline" %>
+          <%= link_to "New entry", new_entry_path, class: "hover:underline" %>
+          <%= link_to "Report", report_path, class: "hover:underline" %>
+          <%= link_to "Analysis", analysis_path, class: "hover:underline" %>
+          <%= link_to "Saved reports", reports_saved_path, class: "hover:underline" %>
+          <%= button_to "Log out", session_path, method: :delete, class: "ml-auto hover:underline bg-transparent border-0 p-0 cursor-pointer text-inherit" %>
+        </div>
+      </nav>
+    <% end %>
+
+    <main class="container mx-auto mt-10 px-5 pb-16">
+      <%= yield %>
+    </main>
+  </body>
+</html>

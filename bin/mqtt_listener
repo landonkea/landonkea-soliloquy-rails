@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+# ───────────────────────────────────────────────────────────────────
+# bin/mqtt_listener, the real network loop for the MQTT voice-journal bridge
+# ───────────────────────────────────────────────────────────────────
+# Run this as its own long-lived process (see the README's "MQTT bridge" section, and
+# Procfile.dev) -- it's the direct replacement for the original's mqtt_bridge.py's
+# start_mqtt_listener(), just split into its own script instead of being started
+# automatically inside the web server's own boot process, since that's the more
+# idiomatic Rails way to run a second, independent background process.
+#
+# This file owns the actual MQTT network connection (the `mqtt` gem's Client); all the
+# real decision-making about what a message MEANS lives in MqttBridgeService, which is
+# unit-tested directly with plain payload strings and never needs a real broker
+# running to test.
+
+# Boots the full Rails app (models, services, the database connection) so this script
+# can call the exact same EntryCreationService/AnalyzerService everything else uses --
+# a voice-triggered entry should never go through different rules than a browser-typed
+# one.
+require_relative "../config/environment"
+
+require "mqtt"
+
+host = ENV.fetch("MQTT_HOST", "localhost")
+port = ENV.fetch("MQTT_PORT", "1883").to_i
+topic = ENV.fetch("MQTT_TOPIC", "soliloquy/journal")
+ack_topic = "#{topic}/ack"
+query_topic = "#{topic}/query"
+query_response_topic = "#{topic}/query/response"
+
+# This app is a single person's journal -- there's no login carried on an MQTT
+# message, so entries from the bridge attach to whichever account exists. A clear
+# error up front is much better than a confusing crash the first time a voice message
+# arrives.
+user = User.first
+if user.nil?
+  warn "No user account exists yet -- sign up at /registration/new in the web app first, then start this listener."
+  exit 1
+end
+
+Rails.logger.info("MQTT listener starting: connecting to #{host}:#{port}, subscribing to #{topic.inspect} and #{query_topic.inspect} for user #{user.email_address}.")
+
+# persistent_session/client_id kept fixed (not auto-generated) so Mosquitto can queue
+# QoS>=1 messages for this exact client while the listener is offline (asleep laptop,
+# container not up yet) and redeliver them on reconnect -- the same durability
+# reasoning the original's client_id=MQTT_CLIENT_ID, clean_session=False documented.
+MQTT::Client.connect(host: host, port: port, client_id: "soliloquy-bridge", clean_session: false) do |client|
+  client.subscribe([ topic, 1 ], [ query_topic, 1 ])
+
+  client.get do |received_topic, payload|
+    if received_topic == query_topic
+      response = MqttBridgeService.handle_query(payload, user: user)
+      client.publish(query_response_topic, response.to_json, false, 1) if response
+      next
+    end
+
+    outcome = MqttBridgeService.handle_write(payload, user: user)
+    ack =
+      if outcome.entry
+        { status: "ok", entry_id: outcome.entry.id, appended: outcome.appended }
+      else
+        { status: "error", reason: outcome.error }
+      end
+    client.publish(ack_topic, ack.to_json, false, 1)
+  end
+end

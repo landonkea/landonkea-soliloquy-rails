@@ -1,0 +1,47 @@
+# ───────────────────────────────────────────────────────────────────
+# recurring.yml, Solid Queue's built-in cron-like scheduler
+# ───────────────────────────────────────────────────────────────────
+# This is the direct replacement for the original Python app's scheduler.py, which
+# used a separate library (APScheduler) to run jobs on a timer inside the same process
+# as the web server. Solid Queue (a real Rails 8 default, backed by the same database
+# this app already uses, no Redis needed) does the same thing here, declaratively,
+# without adding a new dependency for it. Runs via `bin/jobs` (see Procfile.dev and the
+# Dockerfile) alongside the web server.
+#
+# Deliberately flat, with no per-environment nesting: Solid Queue only applies an
+# environment-specific subset when a top-level key exactly matches the current Rails
+# environment name (e.g. "production:"); since none of these keys do, every one of
+# these tasks runs the same way in development, test, and production alike -- unlike
+# Rails' own generated recurring.yml (which only scheduled its one cleanup task in
+# production), this app wants the automatic-analysis feature visibly working in
+# development too, not hidden behind a "well it'll work once deployed" excuse.
+
+analysis:
+  # How often the routine "self" analysis check-in runs -- every 6 hours by default,
+  # the exact same starting point (not a tuned final answer, see the original's own
+  # comment on this) the Python app shipped with.
+  class: AnalysisJob
+  queue: default
+  schedule: every 6 hours
+
+monthly_report:
+  # Once a month, on the 1st at 3am -- a fixed calendar day, not an hour count, the
+  # same reasoning the original's CronTrigger(day=1, hour=3) used ("every N hours"
+  # can't express "once a month" without drifting).
+  class: MonthlyReportJob
+  queue: default
+  schedule: "0 3 1 * *"
+
+media_retention:
+  # Runs daily; the job itself checks $MEDIA_RETENTION_DAYS and is a no-op unless
+  # that's set -- same "always scheduled, but harmless until opted into" pattern the
+  # original used by only registering this job at all when the env var was present.
+  class: MediaRetentionJob
+  queue: default
+  schedule: every day at 4am
+
+clear_solid_queue_finished_jobs:
+  # Rails' own default housekeeping task, kept as-is -- clears out old finished job
+  # rows so the queue tables don't grow forever.
+  command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+  schedule: every hour at minute 12

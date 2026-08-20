@@ -1,0 +1,8 @@
+<% content_for :title, "Shared report -- Soliloquy" %>
+
+<% if @report %>
+  <div class="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mx-auto prose">
+    <p class="text-xs text-gray-400 mb-4">Shared from Soliloquy -- last <%= @report.days %> day(s), <%= @report.audience %> audience.</p>
+    <pre class="whitespace-pre-wrap font-sans text-gray-800"><%= @report.content %></pre>
+  </div>
+<% end %>

@@ -1,0 +1,57 @@
+<% content_for :title, "Analysis -- Soliloquy" %>
+
+<h1 class="font-bold text-3xl mb-2">Analysis</h1>
+<p class="text-gray-600 mb-6">A background job checks in automatically every few hours (see <code>config/recurring.yml</code>) so there's usually something to look at without asking for it.</p>
+
+<p class="bg-white border border-orange-200 rounded-lg p-4 text-sm text-gray-700 mb-6">
+  <span class="font-semibold text-orange-700">A small thing:</span> <%= @tip %>
+</p>
+
+<div class="bg-white border border-gray-200 rounded-lg p-4 mb-6 text-sm">
+  <h2 class="font-semibold mb-2">Analysis provider keys</h2>
+  <ul class="space-y-1">
+    <% @api_keys.each do |key| %>
+      <li>
+        <span class="font-medium"><%= key[:label] %>:</span>
+        <% if key[:masked].present? %>
+          <span class="text-green-700"><%= key[:masked] %> (configured)</span>
+        <% else %>
+          <span class="text-gray-400">not set (<%= key[:env_var] %>)</span>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</div>
+
+<% if @mood_chart_svg %>
+  <div class="bg-white border border-gray-200 rounded-lg p-5 mb-6">
+    <h2 class="font-semibold mb-3">Mood trend</h2>
+    <%= @mood_chart_svg.html_safe %>
+  </div>
+<% end %>
+
+<% if @snapshots.empty? %>
+  <p class="text-gray-500">No analysis has run yet -- once you've journaled a bit, the background job (or the Report page) will produce one.</p>
+<% else %>
+  <div class="space-y-4">
+    <% @snapshots.each do |snapshot| %>
+      <article class="bg-white border border-gray-200 rounded-lg p-5">
+        <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+          <span><%= snapshot.created_at.strftime("%B %-d, %Y at %-I:%M %p") %> -- last <%= snapshot.days %> day(s)</span>
+          <% if snapshot.mood_score %>
+            <span class="font-medium text-orange-700">Mood: <%= snapshot.mood_score %>/10</span>
+          <% end %>
+        </div>
+        <p class="text-gray-800 mb-2"><%= snapshot.summary %></p>
+        <p class="text-gray-600 text-sm mb-2"><span class="font-medium">Mood notes:</span> <%= snapshot.mood_notes %></p>
+        <% if snapshot.key_topics.any? %>
+          <div class="flex flex-wrap gap-1">
+            <% snapshot.key_topics.each do |topic| %>
+              <span class="text-xs bg-orange-100 text-orange-700 rounded-full px-2 py-0.5"><%= topic %></span>
+            <% end %>
+          </div>
+        <% end %>
+      </article>
+    <% end %>
+  </div>
+<% end %>

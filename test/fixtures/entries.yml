@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  transcript: I went for a walk this morning and felt pretty good about the day ahead.
+  shareable_with_partner: false
+  shareable_with_provider: false
+  tags: <%= ["morning", "walk"].to_json %>
+  speaker:
+  user: one
+  created_at: <%= 2.days.ago.iso8601 %>
+
+two:
+  transcript: Work was stressful today and I could not stop thinking about the deadline.
+  shareable_with_partner: true
+  shareable_with_provider: false
+  tags: <%= ["work"].to_json %>
+  speaker:
+  user: one
+  created_at: <%= 1.day.ago.iso8601 %>

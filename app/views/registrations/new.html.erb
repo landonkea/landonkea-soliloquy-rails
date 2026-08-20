@@ -1,0 +1,35 @@
+<div class="mx-auto md:w-2/3 w-full">
+  <% if alert = flash[:alert] %>
+    <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg inline-block"><%= alert %></p>
+  <% end %>
+
+  <h1 class="font-bold text-4xl">Create your journal</h1>
+  <p class="text-gray-600 mt-2">This creates a brand new, empty account in THIS app only -- see the README for what that does and doesn't mean.</p>
+
+  <% if @user.errors.any? %>
+    <div class="my-5 p-3 bg-red-50 text-red-700 rounded-lg">
+      <ul class="list-disc list-inside">
+        <% @user.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: @user, url: registration_path, class: "contents" do |form| %>
+    <div class="my-5">
+      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Email address", class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
+    </div>
+    <div class="my-5">
+      <%= form.password_field :password, required: true, autocomplete: "new-password", placeholder: "Password", maxlength: 72, class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
+    </div>
+    <div class="my-5">
+      <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", placeholder: "Confirm password", maxlength: 72, class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
+    </div>
+    <%= form.submit "Create account", class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white inline-block font-medium cursor-pointer" %>
+  <% end %>
+
+  <p class="mt-6 text-sm text-gray-500">
+    Already have an account? <%= link_to "Sign in", new_session_path, class: "text-orange-600 underline hover:no-underline" %>
+  </p>
+</div>
