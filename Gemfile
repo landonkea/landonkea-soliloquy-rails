@@ -40,7 +40,7 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.0"
 
 # Active Storage's S3 service (config/storage.yml) needs this to talk to S3-compatible
 # object storage (MinIO, Cloudflare R2, real AWS S3) -- same boto3-does-S3-natively idea
